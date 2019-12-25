@@ -1,0 +1,26 @@
+{
+  "name": "@cryb/xen",
+  "version": "1.0.0",
+  "description": "The CLI tool and hypervisor for deployed @cryb/portal instances.",
+  "main": "index.js",
+  "repository": "https://github.com/crybapp/xen",
+  "author": "William Gibson <william@tired.io>",
+  "license": "MIT",
+  "bin": {
+    "xen": "./index.js"
+  },
+  "dependencies": {
+    "axios": "^0.19.0",
+    "chalk": "^3.0.0",
+    "commander": "^4.0.1",
+    "dockerode": "^3.0.2",
+    "dotenv": "^8.2.0",
+    "execa": "^4.0.0",
+    "inquirer": "^7.0.1",
+    "ora": "^4.0.3",
+    "uri-js": "^4.2.2"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^2.5.21"
+  }
+}
