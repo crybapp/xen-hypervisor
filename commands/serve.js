@@ -1,9 +1,14 @@
 const fs = require('fs')
 const ora = require('ora')
+const chalk = require('chalk')
 const inquirer = require('inquirer')
 
+const { logSplitter } = require('../utils')
 const { createClient } = require('../drivers/docker.driver')
 
+/**
+ * This file is still in development.
+ */
 module.exports = async program => {
 	if(!fs.existsSync('config.json')) {
 		const { initialiseXen } = await inquirer.prompt([{
@@ -15,10 +20,14 @@ module.exports = async program => {
 		if(initialiseXen)
 			await require('./init')(program)
 		else {
-			ora('Exiting. If you would like to initialise Xen, run \'xen init\'').warn()
+			ora(`Exiting. If you would like to initialise Xen, run ${chalk.underline('xen init')}.`).warn()
 			process.exit()
 		}
 	}
+
+	logSplitter('Serving Xen', {
+		newline: program.rawArgs.indexOf('serve') === -1
+	})
 
 	if(!fs.existsSync('bin/portal'))
 		require('./update')(program)

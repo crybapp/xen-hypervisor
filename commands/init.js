@@ -1,10 +1,21 @@
 const fs = require('fs')
 const ora = require('ora')
+const chalk = require('chalk')
 const axios = require('axios')
 const inquirer = require('inquirer')
 
+const { logSplitter } = require('../utils')
+
 module.exports = async program => new Promise(async (resolve, reject) => {
+	/**
+	 * Check if config.json exists
+	 */
 	if(fs.existsSync('config.json')) {
+		/**
+		 * If it does, warn the user that reinitialising Xen
+		 * will override any previous configurations and allow
+		 * them to cancel if need be.
+		 */
 		const { shouldReinitialiseXen } = await inquirer.prompt([{
 			type: 'confirm',
 			name: 'shouldReinitialiseXen',
@@ -12,22 +23,32 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		}])
 	
 		if(!shouldReinitialiseXen) {
-			ora('Exiting. If you would like to reinitialise Xen, run \'xen init\' and type \'Y\'').warn()
+			ora(`Exiting. If you would like to reinitialise Xen, run ${chalk.underline('xen init')} and type ${chalk.underline('Y')}.`).warn()
 			process.exit()
-		}
+		} else console.log()
 	}
 
+	/**
+	 * Ask the user which Atlas API endpoint should be used
+	 * in order to setup this instance of Xen.
+	 */
+	logSplitter('Identifying Atlas', { number: 1, newline: false })
 	let { atlasEndpoint } = await inquirer.prompt([{
 		type: 'list',
 		name: 'atlasEndpoint',
 		message: 'Which Atlas endpoint do you want to authenticate this Xen instance from?',
 		choices: [
-			'api.atlas.cryb.app',
+			'atlas.cryb.app',
 			'localhost:6000',
 			'Custom'
 		]
 	}])
 
+	/**
+	 * If the choice was 'Custom', ask the user for the URL
+	 * of the Atlas API endpoint that should be used to setup
+	 * Xen.
+	 */
 	if(atlasEndpoint === 'Custom') {
 		const { newAtlasEndpoint } = await inquirer.prompt([{
 			type: 'input',
@@ -38,24 +59,51 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		atlasEndpoint = newAtlasEndpoint
 	}
 
+	/**
+	 * If no http:// or https:// hostname was found,
+	 * append http:// to the Atlas API endpoint.
+	 */
 	if(!atlasEndpoint.match(/^[a-zA-Z]+:\/\//))
 		atlasEndpoint = `http://${atlasEndpoint}`
 
+	/**
+	 * Create a placeholder 'atlasUrl' variable
+	 */
 	let atlasUrl
 
 	try {
+		/**
+		 * Try create a new URL object from the
+		 * string containing the Atlas API endpoint.
+		 *
+		 * If it fails, the program will exit.
+		 */
 		atlasUrl = new URL(atlasEndpoint)
 	} catch(error) {
-		return ora('This URL doesn\'t seem valid - try again with a different URL.').fil()
+		return ora('This URL doesn\'t seem valid - try again with a different URL.').fail()
 	}
 
+	/**
+	 * If the endpoint given is not localhost,
+	 * replace the http:// protocol with https://.
+	 */
 	if(atlasUrl.hostname !== 'localhost')
 		atlasUrl = new URL(atlasEndpoint.replace('http://', 'https://'))
 
-	const atlasReachout = ora(`Contacting ${atlasEndpoint}...`).start()
+	/**
+	 * Alert the user the Atlas API endpoint is being
+	 * contacted and define two empty variables for later use.
+	 */
+	const atlasReachout = ora(`Contacting ${chalk.cyan(atlasEndpoint)}...`).start()
 	let instanceUrl, portalRepository
 
 	try {
+		/**
+		 * Send a GET request to /status of the Atlas API
+		 * endpoint. If successful, this endpoint will return
+		 * the instance URL and the origin of the @cryb/portal
+		 * repository that should be pulled by Xen.
+		 */
 		const { data: { instance, origin } } = await axios.get(`${atlasUrl.origin}/status`)
 
 		instanceUrl = instance
@@ -64,10 +112,25 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		return atlasReachout.fail('We couldn\'t contact this Atlas instance. Please try again later.')
 	}
 
-	atlasReachout.succeed(`Contacted ${atlasUrl.origin}!`)
+	/**
+	 * On success, alert the user that the Atlas API endpoint was
+	 * successfully contacted.
+	 */
+	atlasReachout.succeed(`Contacted ${chalk.cyan(atlasUrl.origin)}!`)
 
+	/**
+	 * Use the update script in order to pull the @cryb/portal
+	 * repository into /bin/portal from the aforementioned
+	 * repository URL.
+	 */
 	await require('./update')(program, portalRepository)
 
+	/**
+	 * Ask the user for their Atlas authentication code
+	 * for setting up a new Xen instance. This is a 6-digit
+	 * number.
+	 */
+	logSplitter('Authorizing Xen', { number: 3 })
 	const { authenticationCode } = await inquirer.prompt([{
 		type: 'number',
 		name: 'authenticationCode',
@@ -80,10 +143,21 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		}
 	}])
 
+	/**
+	 * Alert the user that this code will be verified against the
+	 * Atlas API. This will also create two empty variables, id and
+	 * token for future use.
+	 */
 	const verifyingCode = ora('Verifying code...').start()
 	let id, token
 
 	try {
+		/**
+		 * A POST request will be sent to /code of the Atlas
+		 * API endpoint in order to verify the code. If successful,
+		 * the endpoint will return the ID of the Xen instance and
+		 * a token that will be stored and used for further authentication.
+		 */
 		const { data: { id: _id, token: _token } } = await axios.post(`${atlasUrl.origin}/code`, { code: authenticationCode })
 
 		id = _id
@@ -92,11 +166,26 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		return verifyingCode.fail('This code was incorrect. Please try again later.')
 	}
 
-	verifyingCode.succeed(`Recieved token from ${atlasUrl.origin}!`)
-	ora(`Successfully setup! Run xen serve to allow this instance to be used on ${instanceUrl}.`).succeed()
+	/**
+	 * Alert the user a token was recieved from Atlas.
+	 */
+	verifyingCode.succeed(`Recieved token from ${chalk.cyan(atlasUrl.origin)}!`)
 
-	fs.writeFileSync('config.json', JSON.stringify({ id, url: instanceUrl, token }), 'utf8')
+	/**
+	 * Alert the user setup has finished.
+	 */
+	logSplitter('Final Steps', { number: 4 })
+	ora(`Setup successfully!`).succeed()
 
+	/**
+	 * Save the Xen ID, Atlas Endpoint and token to a config.json file.
+	 */
+	fs.writeFileSync('config.json', JSON.stringify({ id, url: atlasEndpoint, token }), 'utf8')
+
+	/**
+	 * Ask the user if they want to go into serving this
+	 * instance of Xen now setup is completed.
+	 */
 	if(program.rawArgs.indexOf('serve') === -1) {
 		const { serveXen } = await inquirer.prompt([{
 			type: 'confirm',
@@ -107,7 +196,7 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		if(serveXen)
 			require('./serve')(program)
 		else
-			ora('Exiting. If you would like to serve Xen, run \'xen serve\'').warn()
+			ora(`Exiting. If you would like to serve Xen, run ${chalk.underline('xen serve')}.`).warn()
 	}
 
 	resolve()
