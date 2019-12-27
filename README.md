@@ -1,8 +1,8 @@
 ![Cryb OSS](.github/cryb.png "Cryb OSS Logo")
 
-_**Xen** <sup>Beta</sup> - Portal hypervisor_
+_**Xen**<sup>Beta</sup> - Portal hypervisor_
 
-[![GitHub contributors](https://img.shields.io/github/contributors/crybapp/xen)](https://github.com/crybapp/xen/graphs/contributors) [![License](https://img.shields.io/github/license/crybapp/xen)](https://github.com/crybapp/xen/blob/master/LICENSE) [![PayPal Donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://paypal.me/williamsthing)
+[![GitHub contributors](https://img.shields.io/github/contributors/crybapp/xen)](https://github.com/crybapp/xen/graphs/contributors) [![License](https://img.shields.io/github/license/crybapp/xen)](https://github.com/crybapp/xen/blob/master/LICENSE) [![Patreon Donate](https://img.shields.io/badge/donate-Patreon-red.svg)](https://patreon.com/cryb)
 
 ## Docs
 * [Info](#info)
