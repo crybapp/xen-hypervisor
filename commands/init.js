@@ -39,7 +39,7 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		message: 'Which Atlas endpoint do you want to authenticate this Xen instance from?',
 		choices: [
 			'atlas.cryb.app',
-			'localhost:6000',
+			'localhost:5500',
 			'Custom'
 		]
 	}])
@@ -149,7 +149,7 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 	 * token for future use.
 	 */
 	const verifyingCode = ora('Verifying code...').start()
-	let id, token
+	let id, vm, token
 
 	try {
 		/**
@@ -158,12 +158,13 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		 * the endpoint will return the ID of the Xen instance and
 		 * a token that will be stored and used for further authentication.
 		 */
-		const { data: { id: _id, token: _token } } = await axios.post(`${atlasUrl.origin}/code`, { code: authenticationCode })
+		const { data: { id: _id, vm: _vm, token: _token } } = await axios.post(`${atlasUrl.origin}/code`, { code: authenticationCode })
 
 		id = _id
+		vm = _vm
 		token = _token
 	} catch(error) {
-		return verifyingCode.fail('This code was incorrect. Please try again later.')
+		return verifyingCode.fail('This code is incorrect. Please try again later.')
 	}
 
 	/**
