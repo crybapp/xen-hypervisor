@@ -17,8 +17,7 @@
     "dotenv": "^8.2.0",
     "execa": "^4.0.0",
     "inquirer": "^7.0.1",
-    "ora": "^4.0.3",
-    "uri-js": "^4.2.2"
+    "ora": "^4.0.3"
   },
   "devDependencies": {
     "@types/dockerode": "^2.5.21"
