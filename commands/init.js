@@ -1,16 +1,16 @@
 const fs = require('fs')
 const ora = require('ora')
 const chalk = require('chalk')
-const axios = require('axios')
+const { default: axios } = require('axios')
 const inquirer = require('inquirer')
 
-const { logSplitter } = require('../utils')
+const { logSplitter, getRootPath } = require('../utils')
 
 module.exports = async program => new Promise(async (resolve, reject) => {
 	/**
 	 * Check if config.json exists
 	 */
-	if(fs.existsSync('config.json')) {
+	if (fs.existsSync('config.json')) {
 		/**
 		 * If it does, warn the user that reinitialising Xen
 		 * will override any previous configurations and allow
@@ -22,10 +22,27 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 			message: `It looks like Xen has already been initialised. Do you want to reinitialise it?`
 		}])
 	
-		if(!shouldReinitialiseXen) {
+		if (!shouldReinitialiseXen) {
 			ora(`Exiting. If you would like to reinitialise Xen, run ${chalk.underline('xen init')} and type ${chalk.underline('Y')}.`).warn()
 			process.exit()
-		} else console.log()
+		} else {
+			const { url, token } = require('../config.json'),
+				unlinkingAtlas = ora('Unlinking previous Xen instance...')
+
+			try {
+				await axios.post(`${url}/vm/unlink`, {}, {
+					headers: {
+						authorization: `Bearer ${token}`
+					}
+				})
+
+				fs.unlinkSync(`${getRootPath()}/config.json`)
+				unlinkingAtlas.succeed('Successfully unlinked instance!')
+			} catch (error) {
+				unlinkingAtlas.fail(`Error unlinking instance: ${error}`)
+			}
+			console.log()
+		}
 	}
 
 	/**
@@ -49,7 +66,7 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 	 * of the Atlas API endpoint that should be used to setup
 	 * Xen.
 	 */
-	if(atlasEndpoint === 'Custom') {
+	if (atlasEndpoint === 'Custom') {
 		const { newAtlasEndpoint } = await inquirer.prompt([{
 			type: 'input',
 			name: 'newAtlasEndpoint',
@@ -63,7 +80,7 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 	 * If no http:// or https:// hostname was found,
 	 * append http:// to the Atlas API endpoint.
 	 */
-	if(!atlasEndpoint.match(/^[a-zA-Z]+:\/\//))
+	if (!atlasEndpoint.match(/^[a-zA-Z]+:\/\//))
 		atlasEndpoint = `http://${atlasEndpoint}`
 
 	/**
@@ -79,7 +96,7 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		 * If it fails, the program will exit.
 		 */
 		atlasUrl = new URL(atlasEndpoint)
-	} catch(error) {
+	} catch (error) {
 		return ora('This URL doesn\'t seem valid - try again with a different URL.').fail()
 	}
 
@@ -87,7 +104,7 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 	 * If the endpoint given is not localhost,
 	 * replace the http:// protocol with https://.
 	 */
-	if(atlasUrl.hostname !== 'localhost')
+	if (atlasUrl.hostname !== 'localhost')
 		atlasUrl = new URL(atlasEndpoint.replace('http://', 'https://'))
 
 	/**
@@ -108,7 +125,7 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 
 		instanceUrl = instance
 		portalRepository = origin
-	} catch(error) {
+	} catch (error) {
 		return atlasReachout.fail('We couldn\'t contact this Atlas instance. Please try again later.')
 	}
 
@@ -137,7 +154,7 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		message: 'What\'s your Atlas authentication code?',
 
 		validate: input => {
-			if(`${input}`.length !== 6) return 'This code is not valid - please try again.'
+			if (`${input}`.length !== 6) return 'This code is not valid - please try again.'
 
 			return true
 		}
@@ -163,7 +180,7 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 		id = _id
 		vm = _vm
 		token = _token
-	} catch(error) {
+	} catch (error) {
 		return verifyingCode.fail('This code is incorrect. Please try again later.')
 	}
 
@@ -187,14 +204,14 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 	 * Ask the user if they want to go into serving this
 	 * instance of Xen now setup is completed.
 	 */
-	if(program.rawArgs.indexOf('serve') === -1) {
+	if (program.rawArgs.indexOf('serve') === -1) {
 		const { serveXen } = await inquirer.prompt([{
 			type: 'confirm',
 			name: 'serveXen',
 			message: `Would you like to serve Xen for ${instanceUrl}?`
 		}])
 	
-		if(serveXen)
+		if (serveXen)
 			require('./serve')(program)
 		else
 			ora(`Exiting. If you would like to serve Xen, run ${chalk.underline('xen serve')}.`).warn()

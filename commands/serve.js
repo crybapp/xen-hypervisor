@@ -12,14 +12,14 @@ const { createClient } = require('../drivers/docker.driver')
  * This file is still in development.
  */
 module.exports = async program => {
-	if(!fs.existsSync('config.json')) {
+	if (!fs.existsSync('config.json')) {
 		const { initialiseXen } = await inquirer.prompt([{
 			type: 'confirm',
 			name: 'initialiseXen',
 			message: `It looks like Xen hasn't been initialised. Do you want to initialise it?`
 		}])
 	
-		if(initialiseXen)
+		if (initialiseXen)
 			await require('./init')(program)
 		else {
 			ora(`Exiting. If you would like to initialise Xen, run ${chalk.underline('xen init')}.`).warn()
@@ -27,7 +27,7 @@ module.exports = async program => {
 		}
 	}
 
-	if(!fs.existsSync('bin/portal'))
+	if (!fs.existsSync('bin/portal'))
 		require('./update')(program)
 
 	logSplitter('Connecting to Atlas', {
@@ -43,14 +43,14 @@ module.exports = async program => {
 	const client = new Client(url)
 
 	client.on('connected', async () => {
-		if(reconnectingToAtlas) {
+		if (reconnectingToAtlas) {
 			reconnectingToAtlas.succeed('Reconnected to Atlas!')
 			reconnectingToAtlas = null
 		} else 
 			connectingToAtlas.succeed('Connected to Atlas!')
 
 		authenticatingWithAtlas = ora(`Authenticating with Atlas...`).start()
-		await client.authenticate({ token })
+		const user = await client.authenticate({ token })
 		authenticatingWithAtlas.succeed('Authenticated with Atlas!')
 	})
 
@@ -59,19 +59,19 @@ module.exports = async program => {
 	})
 
 	client.on('disconnected', (code, reason) => {
-		if(reconnectingToAtlas)
+		if (reconnectingToAtlas)
 			reconnectingToAtlas.stop()
 
-		if(authenticatingWithAtlas)
+		if (authenticatingWithAtlas)
 			authenticatingWithAtlas.stop()
 		
 		reconnectingToAtlas = ora('Disconnected from Atlas - reconnecting...').start()
 	})
 
 	client.on('error', error => {
-		if(!reconnectingToAtlas) return
+		if (!reconnectingToAtlas) return
 
-		if(authenticatingWithAtlas)
+		if (authenticatingWithAtlas)
 			authenticatingWithAtlas.stop()
 
 		reconnectingToAtlas.fail(`Atlas connection error: ${error.message}`)
@@ -95,7 +95,7 @@ module.exports = async program => {
 	// 		const { stream } = JSON.parse(data.toString())
 
 	// 		building.text = `Building Docker image: ${stream}`
-	// 	} catch(error) {}
+	// 	} catch (error) {}
 	// })
 
 	// stream.on('done', data => console.log(JSON.parse(data.toString())))
@@ -104,7 +104,7 @@ module.exports = async program => {
 	// 	await new Promise((resolve, reject) => 
 	// 		client.modem.followProgress(stream, (err, res) => err ? reject(err) : resolve(res))
 	// 	)
-	// } catch(error) {
+	// } catch (error) {
 	// 	return building.fail(`Fail building Docker image: ${error}`)
 	// }
 

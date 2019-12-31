@@ -12,7 +12,7 @@ const getServerPath = () => {
 
 module.exports.createClient = () => {
     const server = getServerPath()
-    if(!server) return null
+    if (!server) return null
 
     return new Docker(server)
 }

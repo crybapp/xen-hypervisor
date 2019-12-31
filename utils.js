@@ -1,12 +1,12 @@
 const chalk = require('chalk')
 
 module.exports.logSplitter = (title, options) => {
-	if(!options)
+	if (!options)
 		options = {
 			newline: true
 		}
 
-	if(typeof options.newline === 'undefined') options.newline = true
+	if (typeof options.newline === 'undefined') options.newline = true
 
 	const line = chalk.gray('---'),
 			number = options.number ? ` ${chalk.dim(`${options.number}.`)}` : '',
@@ -17,3 +17,5 @@ module.exports.logSplitter = (title, options) => {
 		`${newline}${line}${number} ${chalk.bold(title)} ${line}` :
 		`${line}${line}`)
 }
+
+module.exports.getRootPath = () => __dirname.split('/').splice(0, __dirname.split('/').length).join('/')

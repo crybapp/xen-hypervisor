@@ -39,13 +39,13 @@ module.exports = async (program, _repositoryUrl) => new Promise(async (resolve, 
 		/**
 		 * If there is an error, throw it
 		 */
-		if(error) throw error
+		if (error) throw error
 
 		/**
 		 * Detect if Git updated @cryb/portal or newly cloned it.
 		 * Log the status accordingly.
 		 */
-		if(stdout.trim() === 'Already up to date.')
+		if (stdout.trim() === 'Already up to date.')
 			ora(`There were no updates in ${chalk.cyan('@cryb/portal')} - you already have the latest version!`).warn()
 		else 
 			ora(`${type === 'pull' ? 'Pulled' : 'Cloned'} ${chalk.cyan('@cryb/portal')} from ${chalk.cyan(repositoryUrl)}!`).succeed()
