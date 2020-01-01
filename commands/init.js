@@ -1,8 +1,8 @@
 const fs = require('fs')
 const ora = require('ora')
 const chalk = require('chalk')
-const { default: axios } = require('axios')
 const inquirer = require('inquirer')
+const { default: axios } = require('axios')
 
 const { logSplitter, getRootPath } = require('../utils')
 
@@ -187,7 +187,8 @@ module.exports = async program => new Promise(async (resolve, reject) => {
 	/**
 	 * Alert the user a token was recieved from Atlas.
 	 */
-	verifyingCode.succeed(`Recieved token from ${chalk.cyan(atlasUrl.origin)}!`)
+	verifyingCode.succeed(`Recieved token from ${chalk.cyan(atlasUrl.origin)}! `)
+	ora(`This Xen instance is ${chalk.cyan(`~${vm.name}`)}`).info()
 
 	/**
 	 * Alert the user setup has finished.
