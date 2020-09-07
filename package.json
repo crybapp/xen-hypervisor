@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "The CLI tool and hypervisor for deployed @cryb/portal instances.",
   "main": "index.js",
-  "repository": "https://github.com/crybapp/xen",
-  "author": "William Gibson <william@tired.io>",
+  "repository": "https://github.com/crybapp/xen.git",
+  "author": "JeDaYoshi <hi@jeda.im>",
   "license": "MIT",
   "bin": {
     "xen": "./index.js"
